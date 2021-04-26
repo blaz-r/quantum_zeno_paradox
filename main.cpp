@@ -11,7 +11,9 @@
  *
  *  Author: Blaz Rolih
  *          @blaz-r
- *         
+ *
+ *  Requires c++ version 14
+ *
  * */
 
 
@@ -50,7 +52,7 @@ public:
      *  Dot product operator for two spins, used for probability calculation
      * */
     std::complex<double> operator*(Spin spin2) {
-        return this->state[0] * spin2.state[0] + this->state[1] * spin2.state[1];
+        return conj(this->state[0]) * spin2.state[0] + conj(this->state[1]) * spin2.state[1];
     }
 
     /*
@@ -68,7 +70,7 @@ public:
     /*
      *  Calculates probability that current spin is in state minus |->
      * */
-    std::complex<double> calculateMinusProbability (){
+    std::complex<double> calculateMinusProbability() {
         // state minus |-> also 1/sqrt(2) * (up - down)
         Spin minus = Spin(1 / sqrt(2), -1 / sqrt(2));
 
@@ -143,7 +145,7 @@ public:
         // clear the map
         states['+'] = 0;
         states['-'] = 0;
-        std::cout << "Measurements for time interval: " << interval << " periode." << std::endl;
+        std::cout << "Measurements for time interval: " << interval << " period." << std::endl;
 
         // start at 0 and increase time for given interval each time
         double time = 0;
@@ -152,11 +154,9 @@ public:
             char measurement = waveFunction.measure();  // + or - depending on time
             states[measurement]++;  // increase count of measured state
             if(print)
-                std::cout << measurement << " ";
+                std::cout << time << "T: " << measurement << std::endl;
             time += interval;
         }
-        if(print)
-            std::cout << std::endl;
 
         double percentageOfPlus = states['+'] / (double) numberOfMeasurements * 100.0;
         double percentageOfMinus = 100 - percentageOfPlus;
@@ -186,22 +186,38 @@ public:
 };
 
 int main() {
+
+    // probability of each state at certain time
+    Spin test = Spin(1);
+    std::cout << "[T = 1]: " << "p|+> = " << test.calculatePlusProbability().real()
+              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
+    test = Spin(0.5);
+    std::cout << "[T = 0.5]: " << "p|+> = " <<test.calculatePlusProbability().real()
+              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
+    test = Spin(0.25);
+    std::cout << "[T = 0.25]: " << "p|+> = " <<test.calculatePlusProbability().real()
+              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
+    test = Spin(0);
+    std::cout << "[T = 0]: " << "p|+> = " <<test.calculatePlusProbability().real()
+              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    Zeno* zeno = new Zeno();
+    zeno->measure(true, 0.5, 50);
+    std::cout << "<-------------------------------------------->" << std::endl;
+
     // measurement at 1 period interval
-    Zeno* zeno1 = new Zeno();
-    zeno1->measure(false, 1, 100000);
+    zeno->measure(false, 1, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
     // measurement at 0.5 period interval
-    Zeno* zeno05 = new Zeno();
-    zeno05->measure(false, 0.5, 100000);
+    zeno->measure(false, 0.5, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
-    // measurement at 0.25 period interval
-    Zeno* zeno025 = new Zeno();
-    zeno025->measure(false, 0.25, 100000);
+    // measurement at 0.25 period interval;
+    zeno->measure(false, 0.25, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // simulation of quantum zeno paradox
-    Zeno* zenoParadox = new Zeno();
-    zenoParadox->paradox(100000);
+    zeno->paradox(100000);
 
     return 0;
 }
