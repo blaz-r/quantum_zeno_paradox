@@ -43,6 +43,21 @@ public:
         state[1] = sqrt2 * std::exp(1i * exponent);
         symbol = '?';
     }
+
+    /*
+     *  Makes evolution for given time, ie. rotates state according to original equation
+     *
+     *  Equation: |Sig(t)> = 1/sqrt(2) * ( e^(-i*w*T/2) * up + e^(i*w*T/2) * down)
+     *  where omega (w) is 2 * PI, up is [1, 0] and down is [0, 1]
+     * */
+    void evolution(double time) {
+        using namespace std::complex_literals;  // imaginary value (i)
+        // makes evolution for given time
+        double exponent = 2 * M_PI * time / 2;
+        state[0] *= std::exp(-1i * exponent);
+        state[1] *= std::exp(1i * exponent);
+        symbol = '?';
+    }
     /*
      *  Constructor that makes state from given x and y values
      * */
@@ -141,7 +156,7 @@ public:
      *  Repeat the measurement of state selected number of time with given interval in between
      *  To print each measurement as + or -, print needs to be set on true
      * */
-    void measure(bool print, double interval, int numberOfMeasurements) {
+    void measure(bool print, bool collapse, double interval, int numberOfMeasurements) {
         // clear the map
         states['+'] = 0;
         states['-'] = 0;
@@ -149,8 +164,21 @@ public:
 
         // start at 0 and increase time for given interval each time
         double time = 0;
+        Spin waveFunction = Spin(time);
         for (int i = 0; i < numberOfMeasurements; i++) {
-            Spin waveFunction = Spin(time); // new wave function since it collapses
+            if(collapse) {
+                /* Since we measure the function every time, it collapses in either |+> or |->
+                 * and we then make evolution from that collapsed state forwards.
+                 * This is how it works in real life
+                 * */
+                waveFunction.evolution(time);
+            } else {
+                /* This is example for a universe, unlike ours, where there's no collapse of wave function
+                 * We don't have any collapses, so we always just start in state [+> and then rotate it
+                 * for given time, all according to equation defined in class Spin
+                 * */
+                waveFunction = Spin(time);
+            }
             char measurement = waveFunction.measure();  // + or - depending on time
             states[measurement]++;  // increase count of measured state
             if(print)
@@ -174,50 +202,126 @@ public:
      * */
     void paradox(int numberOfMeasurements) {
         std::cout << "Quantum Zeno paradox: " << std::endl;
-        // start at 1 period and decrease until 10^-10
+        // start at 1 period and decrease until 10^-12
         double interval = 1;
-        while(interval > pow(10, -10)) {
+        while(interval > pow(10, -12)) {
             std::cout << "<-------------------------------------------->" << std::endl;
-            measure(false, interval, numberOfMeasurements); // measure at given interval
+            measure(false, true, interval, numberOfMeasurements); // measure at given interval
 
             interval /= 2;
         }
     }
 };
 
-int main() {
+void testSameObject() {
+    std::cout << "Test using evolution of SAME object:" << std::endl;
+    std::cout << "First with time 1 period, then 0,5 then 0,25 and finally 0." << std::endl;
 
-    // probability of each state at certain time
-    Spin test = Spin(1);
-    std::cout << "[T = 1]: " << "p|+> = " << test.calculatePlusProbability().real()
-              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
-    test = Spin(0.5);
-    std::cout << "[T = 0.5]: " << "p|+> = " <<test.calculatePlusProbability().real()
-              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
-    test = Spin(0.25);
-    std::cout << "[T = 0.25]: " << "p|+> = " <<test.calculatePlusProbability().real()
-              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
-    test = Spin(0);
-    std::cout << "[T = 0]: " << "p|+> = " <<test.calculatePlusProbability().real()
-              << ", p|-> = " << test.calculateMinusProbability().real() << std::endl;
+    Spin sameObj = Spin(1);
+    std::cout << "[T = 1]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    sameObj.evolution(0.5);
+    std::cout << "[T = 0.5]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    sameObj.evolution(0.25);
+    std::cout << "[T = 0.25]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    sameObj.evolution(0);
+    std::cout << "[T = 0]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
     std::cout << "<-------------------------------------------->" << std::endl;
 
+    std::cout << "Measurement: " << sameObj.measure() << std::endl;
+
+    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "Evolution for 1 period" << std::endl;
+    sameObj.evolution(1);
+
+    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "Measurement: " << sameObj.measure() << std::endl;
+
+    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+              << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+}
+
+void testNewObject() {
+    std::cout << "Test with NEW object each time" << std::endl;
+    std::cout << "First with time 1 period, then 0,5 then 0,25 and finally 0." << std::endl;
+    Spin newObj = Spin(1);
+    std::cout << "[T = 1]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    newObj = Spin(0.5);
+    std::cout << "[T = 0.5]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    newObj= Spin(0.25);
+    std::cout << "[T = 0.25]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    newObj= Spin(0);
+    std::cout << "[T = 0]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "Measurement: " << newObj.measure() << std::endl;
+
+    std::cout << "[T = 0]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "New spin at 1 period" << std::endl;
+    newObj = Spin(1);
+
+    std::cout << "[T = 0]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "Measurement: " << newObj.measure() << std::endl;
+
+    std::cout << "[T = 0]: " << "p|+> = " << newObj.calculatePlusProbability().real()
+              << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
+    std::cout << "<-------------------------------------------->" << std::endl;
+}
+
+void testZeno() {
+
+    std::cout << "Test of Zeno class" << std::endl;
     Zeno* zeno = new Zeno();
-    zeno->measure(true, 0.5, 50);
+
+    std::cout << "With collapse and 50 repetitions, print turned on." << std::endl;
+    zeno->measure(true, true, 0.5, 50);
+    std::cout << "<-------------------------------------------->" << std::endl;
+
+    std::cout << "Without collapse and 50 repetitions, print turned on." << std::endl;
+    zeno->measure(true, false, 0.5, 50);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // measurement at 1 period interval
-    zeno->measure(false, 1, 100000);
+    zeno->measure(false, true, 1, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
     // measurement at 0.5 period interval
-    zeno->measure(false, 0.5, 100000);
+    zeno->measure(false, true, 0.5, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
     // measurement at 0.25 period interval;
-    zeno->measure(false, 0.25, 100000);
+    zeno->measure(false, true, 0.25, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // simulation of quantum zeno paradox
     zeno->paradox(100000);
+}
+
+int main() {
+
+    testSameObject();
+
+    testNewObject();
+
+    testZeno();
 
     return 0;
 }
