@@ -4,6 +4,8 @@
 #include <random>
 #include <unordered_map>
 
+#include <
+
 /*
  *  Quantum Zeno paradox simulator
  *
@@ -173,8 +175,9 @@ public:
                  * */
                 waveFunction.evolution(time);
             } else {
-                /* This is example for a universe, unlike ours, where there's no collapse of wave function
-                 * We don't have any collapses, so we always just start in state [+> and then rotate it
+                /* This is example for a universe, unlike ours, where there's no
+                 * collapse of wave function. We don't have any collapses, so we always
+                 * start in state [+> and then rotate it
                  * for given time, all according to equation defined in class Spin
                  * */
                 waveFunction = Spin(time);
@@ -200,13 +203,18 @@ public:
      *  The closer it gets to 0, the less wave function changes,
      *  at the end we just keep measuring |+>
      * */
-    void paradox(int numberOfMeasurements) {
-        std::cout << "Quantum Zeno paradox: " << std::endl;
+    void paradox(int numberOfMeasurements, bool collapse) {
+        std::cout << "Quantum Zeno paradox ";
+        if(collapse)
+            std::cout << "with collapse" << std::endl;
+        else
+            std::cout << "without collapse" << std::endl;
+
         // start at 1 period and decrease until 10^-12
         double interval = 1;
         while(interval > pow(10, -12)) {
             std::cout << "<-------------------------------------------->" << std::endl;
-            measure(false, true, interval, numberOfMeasurements); // measure at given interval
+            measure(false, collapse, interval, numberOfMeasurements); // measure at given interval
 
             interval /= 2;
         }
@@ -312,7 +320,9 @@ void testZeno() {
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // simulation of quantum zeno paradox
-    zeno->paradox(100000);
+    zeno->paradox(100000, false);
+    zeno->paradox(100000, true);
+    free(zeno);
 }
 
 int main() {
