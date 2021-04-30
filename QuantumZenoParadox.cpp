@@ -3,8 +3,11 @@
 #include <complex>
 #include <random>
 #include <unordered_map>
+#include <vector>
+#include <math.h>
 
-#include <
+#include "matplotlib-cpp/matplotlibcpp.h"
+namespace plt = matplotlibcpp;
 
 /*
  *  Quantum Zeno paradox simulator
@@ -150,8 +153,10 @@ public:
 class Zeno {
 private:
     std::unordered_map<char, int> states;   // map containing number of each state
-
 public:
+    std::vector<int> collapseVec;
+    std::vector<int> noCollapseVec;
+
     Zeno() {}
 
     /*
@@ -212,14 +217,57 @@ public:
 
         // start at 1 period and decrease until 10^-12
         double interval = 1;
-        while(interval > pow(10, -12)) {
+        double limit = pow(10, -12);
+        while(interval > limit) {
             std::cout << "<-------------------------------------------->" << std::endl;
             measure(false, collapse, interval, numberOfMeasurements); // measure at given interval
-
+            if(collapse)
+                collapseVec.push_back(states['+']);
+            else
+                noCollapseVec.push_back(states['+']);
             interval /= 2;
         }
     }
 };
+
+void makeGraph(Zeno* zeno) {
+    std::vector<double> intervals;
+    double interval = 1;
+    double limit = pow(10, -12);
+    while(interval > limit) {
+        intervals.push_back(abs(log10(interval)));
+        interval /= 2;
+    }
+
+    plt::figure_size(1200, 780);
+    plt::named_plot("S kolapsom", intervals, zeno->collapseVec);
+    plt::named_plot("Brez kolapsa", intervals , zeno->noCollapseVec, "g--");
+    plt::xlabel("10^-x");
+    plt::ylabel("Stevilo |+>");
+    plt::title("Kvantni zenov paradoks");
+    plt::legend();
+    plt::save("./qZeno.png");
+}
+
+void makeGraphMulti(Zeno* zenoArray, int num) {
+    std::vector<double> intervals;
+    double interval = 1;
+    double limit = pow(10, -12);
+    while(interval > limit) {
+        intervals.push_back(abs(log10(interval)));
+        interval /= 2;
+    }
+    plt::figure_size(1200, 780);
+
+    for(int i = 0; i < num; i++)
+        plt::named_plot(std::to_string(i), intervals, zenoArray[i].collapseVec);
+
+    plt::xlabel("10^-x");
+    plt::ylabel("Number of |+>");
+    plt::title("Quantum Zeno paradox");
+    plt::legend();
+    plt::save("./qZeno.png");
+}
 
 void testSameObject() {
     std::cout << "Test using evolution of SAME object:" << std::endl;
@@ -322,7 +370,16 @@ void testZeno() {
     // simulation of quantum zeno paradox
     zeno->paradox(100000, false);
     zeno->paradox(100000, true);
+    makeGraph(zeno);
     free(zeno);
+}
+
+void testZenoMultiple() {
+    Zeno multi[4];
+    for(int i = 0; i < 4; i++) {
+        multi[i].paradox(100000, true);
+    }
+    makeGraphMulti(multi, 4);
 }
 
 int main() {
@@ -332,6 +389,8 @@ int main() {
     testNewObject();
 
     testZeno();
+
+    //testZenoMultiple();
 
     return 0;
 }
