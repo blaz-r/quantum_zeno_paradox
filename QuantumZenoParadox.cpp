@@ -154,6 +154,7 @@ class Zeno {
 private:
     std::unordered_map<char, int> states;   // map containing number of each state
 public:
+    // used to make plot
     std::vector<int> collapseVec;
     std::vector<int> noCollapseVec;
 
@@ -240,13 +241,14 @@ void makeGraph(Zeno* zeno) {
     }
 
     plt::figure_size(1200, 780);
-    plt::named_plot("S kolapsom", intervals, zeno->collapseVec);
-    plt::named_plot("Brez kolapsa", intervals , zeno->noCollapseVec, "g--");
+    plt::named_plot("With collapse", intervals, zeno->collapseVec);
+    plt::named_plot("Without collapse", intervals , zeno->noCollapseVec, "g--");
+
     plt::xlabel("10^-x");
-    plt::ylabel("Stevilo |+>");
-    plt::title("Kvantni zenov paradoks");
+    plt::ylabel("Number of |+>");
+    plt::title("Quantum Zeno paradox");
     plt::legend();
-    plt::save("./qZeno.png");
+    plt::save("./collVSnoColl.png");
 }
 
 void makeGraphMulti(Zeno* zenoArray, int num) {
@@ -266,7 +268,7 @@ void makeGraphMulti(Zeno* zenoArray, int num) {
     plt::ylabel("Number of |+>");
     plt::title("Quantum Zeno paradox");
     plt::legend();
-    plt::save("./qZeno.png");
+    plt::save("./qZenoMulti.png");
 }
 
 void testSameObject() {
