@@ -6,7 +6,7 @@
 #include <vector>
 #include <math.h>
 
-#include "matplotlib-cpp/matplotlibcpp.h"
+#include "../matplotlib-cpp/matplotlibcpp.h"
 namespace plt = matplotlibcpp;
 
 /*
@@ -21,6 +21,8 @@ namespace plt = matplotlibcpp;
  *
  * */
 
+std::random_device rnd;
+std::default_random_engine eng(rnd());
 
 /*
  *  Class for simulating quantum spin
@@ -110,8 +112,6 @@ public:
          *  Generating random numbers according to discrete distribution,
          *  meaning that either |+> or |-> is selected depending on their probability
          * */
-        std::random_device rnd;
-        std::default_random_engine eng(rnd());
         std::discrete_distribution<> distr({plusProbability, minusProbability});
         double randomNum = distr(eng);
 
@@ -275,7 +275,7 @@ void testSameObject() {
     std::cout << "Test using evolution of SAME object:" << std::endl;
     std::cout << "First with time 1 period, then 0,5 then 0,25 and finally 0." << std::endl;
 
-    Spin sameObj = Spin(1);
+    Spin sameObj(1);
     std::cout << "[T = 1]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
               << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
     sameObj.evolution(0.5);
@@ -291,20 +291,20 @@ void testSameObject() {
 
     std::cout << "Measurement: " << sameObj.measure() << std::endl;
 
-    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+    std::cout << "[T = 0]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
               << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
     std::cout << "<-------------------------------------------->" << std::endl;
 
     std::cout << "Evolution for 1 period" << std::endl;
     sameObj.evolution(1);
 
-    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+    std::cout << "[T = 0]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
               << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
     std::cout << "<-------------------------------------------->" << std::endl;
 
     std::cout << "Measurement: " << sameObj.measure() << std::endl;
 
-    std::cout << "[T = 0]: " << "p|+> = " <<sameObj.calculatePlusProbability().real()
+    std::cout << "[T = 0]: " << "p|+> = " << sameObj.calculatePlusProbability().real()
               << ", p|-> = " << sameObj.calculateMinusProbability().real() << std::endl;
     std::cout << "<-------------------------------------------->" << std::endl;
 }
@@ -312,7 +312,7 @@ void testSameObject() {
 void testNewObject() {
     std::cout << "Test with NEW object each time" << std::endl;
     std::cout << "First with time 1 period, then 0,5 then 0,25 and finally 0." << std::endl;
-    Spin newObj = Spin(1);
+    Spin newObj(1);
     std::cout << "[T = 1]: " << "p|+> = " << newObj.calculatePlusProbability().real()
               << ", p|-> = " << newObj.calculateMinusProbability().real() << std::endl;
     newObj = Spin(0.5);
@@ -349,31 +349,30 @@ void testNewObject() {
 void testZeno() {
 
     std::cout << "Test of Zeno class" << std::endl;
-    Zeno* zeno = new Zeno();
+    Zeno zeno;
 
     std::cout << "With collapse and 50 repetitions, print turned on." << std::endl;
-    zeno->measure(true, true, 0.5, 50);
+    zeno.measure(true, true, 0.5, 50);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     std::cout << "Without collapse and 50 repetitions, print turned on." << std::endl;
-    zeno->measure(true, false, 0.5, 50);
+    zeno.measure(true, false, 0.5, 50);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // measurement at 1 period interval
-    zeno->measure(false, true, 1, 100000);
+    zeno.measure(false, true, 1, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
     // measurement at 0.5 period interval
-    zeno->measure(false, true, 0.5, 100000);
+    zeno.measure(false, true, 0.5, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
     // measurement at 0.25 period interval;
-    zeno->measure(false, true, 0.25, 100000);
+    zeno.measure(false, true, 0.25, 100000);
     std::cout << "<-------------------------------------------->" << std::endl;
 
     // simulation of quantum zeno paradox
-    zeno->paradox(100000, false);
-    zeno->paradox(100000, true);
-    makeGraph(zeno);
-    free(zeno);
+    zeno.paradox(100000, false);
+    zeno.paradox(100000, true);
+    makeGraph(&zeno);
 }
 
 void testZenoMultiple() {
